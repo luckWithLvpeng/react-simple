@@ -1,23 +1,50 @@
+import Component from './component'
 const ReactDOM = {
     render
 }
 
-
 function render(vnode, container) {
+    container.appendChild(_render(vnode))
+}
+function createComponent(comp, props) {
+    var instance = null;
+    if (comp.prototype && comp.prototype.render) {
+        instance = new comp(props)
+    } else {
+        instance = new Component(props)
+        instance.constructor = comp
+        instance.render = function() {
+            return this.constructor()
+        }
+    }
+    return instance
+}
+
+function renderComponent(comp){
+    comp.base = _render(comp.render())
+}
+function _render(vnode) {
+    console.log(vnode)
     // 没传
-    if (vnode === undefined) return;
+    if (vnode === undefined || vnode === null || typeof vnode === "boolean") return null;
 
     // vnode 是字符串
     if (typeof vnode === "string") {
-        const textnode = document.createTextNode(vnode)
-        return container.appendChild(textnode)
+        return document.createTextNode(vnode)
     }
 
     // vnode 是虚拟dom
-    console.log(vnode)
     const {tag, attrs} = vnode;
+    if (typeof tag === "function") {
+        var component = createComponent(tag, attrs)
+        renderComponent(component)
+        console.log(component.base)
+        // vnode.childrens.forEach(child => {
+        //     render(child, component.base)
+        // }) 
+        return component.base
+    }
     const dom = document.createElement(tag);
-    container.appendChild(dom)
     if (attrs) {
         Object.keys(attrs).forEach(key => {
             const value = attrs[key]
@@ -25,10 +52,10 @@ function render(vnode, container) {
             setAttribute(dom, key, value)
         })
     }
-
     vnode.childrens.forEach(child => {
         render(child, dom)
     })
+    return dom
     
 }
 
