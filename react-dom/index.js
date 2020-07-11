@@ -5,11 +5,27 @@ const ReactDOM = {
 
 function render(vnode, container) {
     // 当组件是个数组的时候,会返回一个dom数组
-    var nodes = _render(vnode)
-    if (nodes.constructor === Array) {
-        nodes.forEach(node => container.appendChild(node))
+    var node = _render(vnode)
+    if (node.constructor === Array) {
+        // 渲染dom 数组时
+        node.forEach(node => container.appendChild(node))
+    } else if (node.constructor === vnode.tag) {
+        // 此时node是一个组件 ,不是dom节点
+        // 调用组件的生命周期
+        container.appendChild(node.base)
+        //因为 appendChild 浏览器是进行异步渲染的, 
+        //根据js的单线程时间循环机制, 用setTimeout可以把回调事件排到渲染操作的后面,理论上可以解决
+        //但是我觉得这并不是可靠的解决方案
+        setTimeout(() => {
+            if (node.componentDidMount) {
+                node.componentDidMount()
+                node.componentDidMount = null
+            } else {
+                node.componentDidUpdate && node.componentDidUpdate()
+            }
+        }, 0);
     } else {
-        container.appendChild(nodes)
+        container.appendChild(node)
     }
 }
 function createComponent(comp, props) {
@@ -26,14 +42,22 @@ function createComponent(comp, props) {
     }
     return instance
 }
-
-function renderComponent(comp) {
-    comp.base = _render(comp.render())
-}
 function setComponentProps(comp, props, children) {
+    if (!comp.base) {
+        comp.componentWillMount && comp.componentWillMount(props)
+    } else {
+        comp.componentWillReciveProps && comp.componentWillReciveProps(props)
+    }
     comp.props = props
     comp.props.children = children
     renderComponent(comp)
+}
+function renderComponent(comp) {
+    if (comp.base) {
+        comp.componentWillUpdate && comp.componentWillUpdate()
+    }
+    var base = _render(comp.render())
+    comp.base = base
 }
 function _render(vnode) {
     // 没传
@@ -48,7 +72,7 @@ function _render(vnode) {
         var nodes = []
         vnode.forEach(child => {
             nodes.push(_render(child))
-        }) 
+        })
         return nodes
     }
     // vnode 是虚拟dom
@@ -56,7 +80,7 @@ function _render(vnode) {
     if (typeof tag === "function") {
         var component = createComponent(tag, attrs)
         setComponentProps(component, attrs, children)
-        return component.base
+        return component
     }
     const dom = document.createElement(tag);
     if (attrs) {

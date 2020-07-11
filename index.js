@@ -14,11 +14,39 @@ class Ele extends React.Component {
     constructor(props) {
         super(props)
     }
+
+    // 渲染阶段
+    componentWillMount() {
+        console.log("组件将要挂载")
+    }
+    componentDidMount() {
+        console.log("组件挂载完成")
+        console.log(document.getElementById("con"))
+    }
+
+    // 更新阶段
+    componentWillReciveProps(props) {
+        console.log("将要接收props:" ,props)
+    }
+    shouldComponentUpdate(props) {
+        console.log("组将将要更新")
+    }
+    componentWillUpdate(props) {
+        console.log("组将将要更新")
+    }
+    componentDidUpdate(props) {
+        console.log("组件已经更新")
+    }
+
+    // 组件卸载
+    compoenntWillUnmount() {
+        console.log("组件即将卸载")
+    }
     render() {
         //console.log(this.props)
         return (
             <div title={this.props.title} style={{ background: "red" }}>
-                <h3 className="title">hello</h3>
+                <h3 id={"con"} className="title">hello</h3>
             </div>
         )
     }
