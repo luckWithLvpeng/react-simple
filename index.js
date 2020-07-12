@@ -13,23 +13,23 @@ function Layout(props) {
 class Ele extends React.Component {
     constructor(props) {
         super(props)
+        this.state = {
+            num: 1
+        }
     }
-
     // 渲染阶段
     componentWillMount() {
         console.log("组件将要挂载")
     }
     componentDidMount() {
         console.log("组件挂载完成")
-        console.log(document.getElementById("con"))
     }
-
     // 更新阶段
     componentWillReciveProps(props) {
         console.log("将要接收props:" ,props)
     }
     shouldComponentUpdate(props) {
-        console.log("组将将要更新")
+        console.log("组将是否更新")
     }
     componentWillUpdate(props) {
         console.log("组将将要更新")
@@ -37,7 +37,6 @@ class Ele extends React.Component {
     componentDidUpdate(props) {
         console.log("组件已经更新")
     }
-
     // 组件卸载
     compoenntWillUnmount() {
         console.log("组件即将卸载")
@@ -47,7 +46,32 @@ class Ele extends React.Component {
         return (
             <div title={this.props.title} style={{ background: "red" }}>
                 <h3 id={"con"} className="title">hello</h3>
+                <Display num={this.state.num}></Display>
+                <button onClick={()=> this.setState({num: this.state.num +1})}>自增</button>
             </div>
+        )
+    }
+}
+class Display extends React.Component {
+     // 渲染阶段
+     componentWillMount() {
+        console.log("子组件将要挂载")
+    }
+    componentDidMount() {
+        console.log("子组件挂载完成")
+    }
+    shouldComponentUpdate(props) {
+        console.log("子组将是否更新")
+    }
+    componentWillUpdate(props) {
+        console.log("子组将将要更新")
+    }
+    componentDidUpdate(props) {
+        console.log("子组件已经更新")
+    }
+    render() {
+        return (
+            <div>{ this.props.num}</div>
         )
     }
 }

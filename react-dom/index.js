@@ -1,11 +1,9 @@
 import Component from '../react/component'
-const ReactDOM = {
-    render
-}
+
 
 function render(vnode, container) {
     // 当组件是个数组的时候,会返回一个dom数组
-    var node = _render(vnode)
+    var node = _render(vnode, false)
     if (node.constructor === Array) {
         // 渲染dom 数组时
         node.forEach(node => container.appendChild(node))
@@ -14,20 +12,42 @@ function render(vnode, container) {
         // 调用组件的生命周期
         container.appendChild(node.base)
         //因为 appendChild 浏览器是进行异步渲染的, 
-        //根据js的单线程时间循环机制, 用setTimeout可以把回调事件排到渲染操作的后面,理论上可以解决
+        //根据js的单线程时间循环机制, 用setTimeout可以把回调事件排到渲染渲染操作的后面, 应该可以解决
         //但是我觉得这并不是可靠的解决方案
         setTimeout(() => {
             if (node.componentDidMount) {
+                // 只执行一次
                 node.componentDidMount()
                 node.componentDidMount = null
-            } else {
-                node.componentDidUpdate && node.componentDidUpdate()
             }
         }, 0);
     } else {
         container.appendChild(node)
     }
 }
+
+function update(comp, container) {
+    // 要更新的组件和父节点
+    if (comp.shouldComponentUpdate && comp.shouldComponentUpdate() === false) {
+        return
+    }
+    if (comp.componentWillUpdate) {
+        comp.componentWillUpdate()
+    }
+    var vnode = comp.render()
+    var oldBase = comp.base
+    comp.base = _render(vnode, true)
+    if (container.hasChildNodes() && oldBase) {
+        container.replaceChild(comp.base, oldBase)
+    } else {
+        container.appendChild(comp.base)
+    }
+    // 调用更新完成的生命周期
+    setTimeout(() => {
+        comp.componentDidUpdate && comp.componentDidUpdate()
+    }, 0)
+}
+
 function createComponent(comp, props) {
     var instance = null;
     if (comp.prototype && comp.prototype.render) {
@@ -59,13 +79,13 @@ function renderComponent(comp) {
     var base = _render(comp.render())
     comp.base = base
 }
-function _render(vnode) {
+function _render(vnode, isUpdate) {
     // 没传
     if (vnode === undefined || vnode === null || typeof vnode === "boolean") return document.createTextNode("");
 
     // vnode 是字符串
-    if (typeof vnode === "string") {
-        return document.createTextNode(vnode)
+    if (typeof vnode === "string" || typeof vnode === "number") {
+        return document.createTextNode(vnode.toString())
     }
     // 渲染数组组件
     if (vnode.constructor === Array) {
@@ -92,7 +112,12 @@ function _render(vnode) {
     }
     if (vnode.children) {
         vnode.children.forEach(child => {
-            render(child, dom)
+            if (isUpdate && typeof child.tag === "function") {
+                var comp = createComponent(child.tag, child.attrs)
+                update(comp, dom)
+            } else {
+                render(child, dom)
+            }
         })
     }
     return dom
@@ -132,4 +157,8 @@ function setAttribute(dom, key, value) {
     }
 
 }
-export default ReactDOM
+export default {
+    render,
+    renderComponent,
+    update,
+}
