@@ -47,14 +47,14 @@ class Ele extends React.Component {
             <div title={this.props.title} style={{ background: "red" }}>
                 <h3 id={"con"} className="title">hello</h3>
                 <Display num={this.state.num}></Display>
-                <button onClick={()=> this.setState({num: this.state.num +1})}>自增</button>
+                <button onClick={()=> this.setState({num: this.state.num +5})}>自增</button>
             </div>
         )
     }
 }
 class Display extends React.Component {
      // 渲染阶段
-     componentWillMount() {
+    componentWillMount() {
         console.log("子组件将要挂载")
     }
     componentDidMount() {
@@ -75,6 +75,28 @@ class Display extends React.Component {
         )
     }
 }
+function ChildComponent() {
+    return (
+        <div>
+            <p> 哈哈</p>
+            我是子组件
+            <Display num={1000} />
+        </div>
+    )
+}
+function PureComponent() {
+    return (
+        <div>
+            {/*<ChildComponent />*/}
+            <ul>
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+                <li>4</li>
+            </ul>
+        </div>
+    )
+}
 
 // ReactDOM.render(ele,document.querySelector("#root"))
 //ReactDOM.render(<Layout title="hello" />,document.querySelector("#root"))
@@ -90,4 +112,5 @@ ReactDOM.render(<div>
             哈3
         </div>
     </Ele>
+    <PureComponent />
 </div>, document.querySelector("#root"))

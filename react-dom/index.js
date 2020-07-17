@@ -88,7 +88,7 @@ function _render(vnode, isUpdate) {
         return document.createTextNode(vnode.toString())
     }
     // 渲染数组组件
-    if (vnode.constructor === Array) {
+    if (Array.isArray(vnode)) {
         var nodes = []
         vnode.forEach(child => {
             nodes.push(_render(child))
@@ -98,9 +98,15 @@ function _render(vnode, isUpdate) {
     // vnode 是虚拟dom
     const { tag, attrs, children } = vnode;
     if (typeof tag === "function") {
-        var component = createComponent(tag, attrs)
-        setComponentProps(component, attrs, children)
-        return component
+        if (tag.prototype && tag.prototype.render) {
+            // 类组件
+            var component = new tag(attrs)
+            setComponentProps(component, attrs, children)
+            return component
+        } else {
+            // 纯函数组件
+            return _render(tag(attrs))
+        }
     }
     const dom = document.createElement(tag);
     if (attrs) {
@@ -113,8 +119,14 @@ function _render(vnode, isUpdate) {
     if (vnode.children) {
         vnode.children.forEach(child => {
             if (isUpdate && typeof child.tag === "function") {
-                var comp = createComponent(child.tag, child.attrs)
-                update(comp, dom)
+                if (child.tag.prototype && child.tag.prototype.render) {
+                    // 类组件
+                    var component = new child.tag(child.attrs)
+                    update(component, dom)
+                } else {
+                    // 纯函数组件
+                    render(child, dom)
+                }
             } else {
                 render(child, dom)
             }
